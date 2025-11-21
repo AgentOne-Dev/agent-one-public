@@ -1,2 +1,2 @@
-# agent-one-public
-The public-facing side of AgentOne (new releases and updates are shared here)
+# AgentOne Public
+The public-facing side of AgentOne. New releases and misc resources will be shared here.

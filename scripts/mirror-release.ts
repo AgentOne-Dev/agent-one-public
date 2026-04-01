@@ -21,7 +21,7 @@ type SourceRelease = {
   tagName: string;
   name: string;
   body: string;
-  isLatest: boolean;
+  isPrerelease: boolean;
   assets: Array<{ name: string; size: number }>;
 };
 
@@ -183,7 +183,7 @@ async function checkGhAuthAndRepoAccess(sourceRepo: string): Promise<void> {
 
 async function getSourceRelease(sourceRepo: string, sourceTag?: string): Promise<SourceRelease> {
   info(sourceTag ? `Fetching source release ${sourceTag}...` : "Fetching latest source release...");
-  const format = ["--json", "tagName,name,body,isLatest,assets"];
+  const format = ["--json", "tagName,name,body,isPrerelease,assets"];
   const args = sourceTag
     ? ["release", "view", sourceTag, "--repo", sourceRepo, ...format]
     : ["release", "view", "--repo", sourceRepo, ...format];
@@ -192,7 +192,7 @@ async function getSourceRelease(sourceRepo: string, sourceTag?: string): Promise
     tagName: string;
     name: string | null;
     body: string | null;
-    isLatest: boolean;
+    isPrerelease: boolean;
     assets: Array<{ name: string; size: number }>;
   };
 
@@ -200,7 +200,7 @@ async function getSourceRelease(sourceRepo: string, sourceTag?: string): Promise
     tagName: raw.tagName,
     name: raw.name ?? raw.tagName,
     body: raw.body ?? "",
-    isLatest: raw.isLatest,
+    isPrerelease: raw.isPrerelease,
     assets: raw.assets ?? [],
   };
   ok(`Using source release ${release.tagName} (${release.assets.length} asset(s))`);
@@ -348,7 +348,7 @@ async function main(): Promise<void> {
     return;
   }
 
-  console.log(c("\nRelease Mirror (Bun)\n", 35));
+  console.log(c("\nRelease Mirror\n", 35));
   await checkGhAvailable();
   await checkGhAuthAndRepoAccess(args.sourceRepo);
   await ensureWritable(tmpdir());

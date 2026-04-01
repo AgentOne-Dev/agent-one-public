@@ -216,35 +216,22 @@ async function downloadAssets(sourceRepo: string, tag: string, dir: string): Pro
   return files;
 }
 
-function looksLikeText(buffer: Buffer): boolean {
-  if (buffer.length === 0) return true;
-  let suspicious = 0;
-  const max = Math.min(buffer.length, 2048);
-  for (let i = 0; i < max; i += 1) {
-    const b = buffer[i];
-    if (b === 0) return false;
-    if (b < 7 || (b > 14 && b < 32)) suspicious += 1;
+async function rewriteLatestJson(filePaths: string[]): Promise<boolean> {
+  const latestPath = filePaths.find((p) => basename(p) === "latest.json");
+  if (!latestPath) {
+    warn("latest.json not found in assets, skipping repo reference rewrite");
+    return false;
   }
-  return suspicious / max < 0.1;
-}
-
-async function rewriteRepoRefs(filePaths: string[]): Promise<number> {
-  info(`Rewriting "${SEARCH_REPO}" -> "${REPLACE_REPO}" in text assets...`);
-  let changed = 0;
-  for (const p of filePaths) {
-    const st = await stat(p);
-    if (!st.isFile()) continue;
-    const buf = await readFile(p);
-    if (!looksLikeText(buf)) continue;
-    const text = buf.toString("utf8");
-    const updated = text.split(SEARCH_REPO).join(REPLACE_REPO);
-    if (updated !== text) {
-      await writeFile(p, updated, "utf8");
-      changed += 1;
-    }
+  info(`Rewriting "${SEARCH_REPO}" -> "${REPLACE_REPO}" in latest.json...`);
+  const text = await readFile(latestPath, "utf8");
+  const updated = text.split(SEARCH_REPO).join(REPLACE_REPO);
+  if (updated !== text) {
+    await writeFile(latestPath, updated, "utf8");
+    ok("Updated latest.json");
+    return true;
   }
-  ok(`Updated ${changed} text file(s)`);
-  return changed;
+  ok("latest.json unchanged");
+  return false;
 }
 
 async function releaseExists(targetRepo: string, tag: string): Promise<boolean> {
@@ -365,7 +352,7 @@ async function main(): Promise<void> {
 
   try {
     const files = await downloadAssets(args.sourceRepo, source.tagName, workDir);
-    await rewriteRepoRefs(files);
+    await rewriteLatestJson(files);
     await ensureTargetRelease({
       targetRepo: args.targetRepo,
       tag: targetTag,

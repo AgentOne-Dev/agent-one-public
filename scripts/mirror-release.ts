@@ -1,5 +1,9 @@
 #!/usr/bin/env bun
 
+/*
+Run this script of the mirror-release workflow in the private repo fails.
+*/
+
 import { access, mkdtemp, readdir, readFile, rm, stat, writeFile } from "fs/promises";
 import { constants as fsConstants } from "fs";
 import { tmpdir } from "os";
